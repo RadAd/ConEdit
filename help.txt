@@ -1,0 +1,23 @@
+ConEdit <filename>
+
+  Commands:
+
+  Ctrl-A	- Select all
+  Ctrl-C	- Copy selection to clipboard
+  Ctrl-F	- Find
+  Ctrl-G	- Goto line
+  Ctrl-I	- Toggle case sensitive search
+  Ctrl-R	- Revert to saved file
+  Ctrl-S	- Save
+  Ctrl-U	- Make uppercase
+  Ctrl-Shift-U	- Make lowercase
+  Ctrl-V	- Paste from clipboard
+  Ctrl-W	- Toggle show whitespace
+  Ctrl-X	- Cut selection to clipboard
+  Ctrl-Y	- Redo
+  Ctrl-Z	- Undo
+  Alt-X		- Exit
+  Ctrl-]	- Find matching brace
+  F3		- Search forward
+  Shift-F3	- Search backward
+  F12		- Resize buffer to window size
