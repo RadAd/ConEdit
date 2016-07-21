@@ -10,7 +10,7 @@ A simple text editor for Windows console
 
 Features
 --------
-- Edit any file
-- Multi-level undo
+- Edit any text file
+- Multi-level undo/redo
 - Unicode
-- Change case
+- Find in file
