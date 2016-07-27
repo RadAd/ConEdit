@@ -17,7 +17,9 @@ public:
     {
         ModeBase::Draw(screen, scheme, false);
 
-        buffer.clear(scheme.wAttrStatusFocus, L' ');
+        WORD wAttribute = 0;
+        scheme.wAttrStatusFocus.apply(wAttribute);
+        buffer.clear(wAttribute, L' ');
 
         WriteBegin(buffer, _COORD(1, 0), p);
         WriteBegin(buffer, _COORD(static_cast<SHORT>(len + 2), 0), pk.c_str());

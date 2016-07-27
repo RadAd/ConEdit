@@ -74,7 +74,8 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
         size_t tab = 0;
         for (SHORT X = 0; X < buffer.size.X; ++X)
         {
-            itW->Attributes = scheme.wAttrDefault;
+            itW->Attributes = 0;
+            scheme.wAttrDefault.apply(itW->Attributes);
             itW->Char.UnicodeChar = L' ';
             if (p == selection.end && !PastEOL)
             {
@@ -88,7 +89,7 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                 if (tab > 0)
                 {
                     if (selection.isin(p - 1))
-                        itW->Attributes = scheme.wAttrSelected;
+                        scheme.wAttrSelected.apply(itW->Attributes);
                     --tab;
                 }
                 else
@@ -96,7 +97,7 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                     if (p >= chars.size())
                     {
                         itW->Char.UnicodeChar = L'~';
-                        itW->Attributes = scheme.wAttrWhiteSpace;
+                        scheme.wAttrWhiteSpace.apply(itW->Attributes);
                     }
 #if 1
                     else if (chars[p] == L'\t')
@@ -104,7 +105,7 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                         if (showWhiteSpace)
                         {
                             itW->Char.UnicodeChar = L'¬';
-                            itW->Attributes = scheme.wAttrWhiteSpace;
+                            scheme.wAttrWhiteSpace.apply(itW->Attributes);
                         }
                         tab = tabSize - 1 - ((a.column + X) % tabSize);
                     }
@@ -114,7 +115,7 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                         if (showWhiteSpace)
                         {
                             itW->Char.UnicodeChar = L'·';
-                            itW->Attributes = scheme.wAttrWhiteSpace;
+                            scheme.wAttrWhiteSpace.apply(itW->Attributes);
                         }
                     }
                     else if (iswspace(chars[p]))
@@ -122,7 +123,7 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                         if (showWhiteSpace)
                         {
                             itW->Char.UnicodeChar = L'¶';
-                            itW->Attributes = scheme.wAttrWhiteSpace;
+                            scheme.wAttrWhiteSpace.apply(itW->Attributes);
                         }
                     }
                     else if (iswprint(chars[p])) // TODO Use locale?
@@ -134,10 +135,10 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                         case 27: itW->Char.UnicodeChar = L'E'; break;   // Escape
                         default: itW->Char.UnicodeChar = L'¿'; break;
                         }
-                        itW->Attributes = scheme.wAttrNonPrint;
+                        scheme.wAttrNonPrint.apply(itW->Attributes);
                     }
                     if (selection.isin(p))
-                        itW->Attributes = (itW->Attributes & ~(FOREGROUND_MASK | BACKGROUND_MASK)) | scheme.wAttrSelected;
+                        scheme.wAttrSelected.apply(itW->Attributes);
                     ++p;
                 }
             }

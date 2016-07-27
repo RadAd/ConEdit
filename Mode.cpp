@@ -6,14 +6,14 @@
 
 EditScheme::EditScheme(WORD wAttributes)
 {
-    wAttrDefault = wAttributes;
-    wAttrSelected = BACKGROUND_BLUE | BACKGROUND_INTENSITY | (wAttrDefault & FOREGROUND_MASK);
-    wAttrWhiteSpace = FOREGROUND_DGREY | (wAttrDefault & BACKGROUND_MASK);
+    wAttrDefault = Attribute(wAttributes, FOREGROUND_MASK | BACKGROUND_MASK);
+    wAttrSelected = Attribute(BACKGROUND_BLUE | BACKGROUND_INTENSITY, BACKGROUND_MASK);
+    wAttrWhiteSpace = Attribute(FOREGROUND_DGREY, FOREGROUND_MASK);
     //wAttrNonPrint = _halfbyteswap_word(wAttrDefault);
-    wAttrNonPrint = BACKGROUND_BLACK | FOREGROUND_WHITE | COMMON_LVB_REVERSE_VIDEO;
-    wAttrStatus = BACKGROUND_LGREY | FOREGROUND_BLACK;
-    wAttrStatusFocus = BACKGROUND_BLUE | FOREGROUND_WHITE;
-    wAttrError = BACKGROUND_RED | FOREGROUND_WHITE;
+    wAttrNonPrint = Attribute(BACKGROUND_BLACK | FOREGROUND_WHITE | COMMON_LVB_REVERSE_VIDEO, FOREGROUND_MASK | BACKGROUND_MASK | COMMON_LVB_REVERSE_VIDEO);
+    wAttrStatus = Attribute(BACKGROUND_LGREY | FOREGROUND_BLACK, FOREGROUND_MASK | BACKGROUND_MASK);
+    wAttrStatusFocus = Attribute(BACKGROUND_BLUE | FOREGROUND_WHITE, FOREGROUND_MASK | BACKGROUND_MASK);
+    wAttrError = Attribute(BACKGROUND_RED | FOREGROUND_WHITE, FOREGROUND_MASK | BACKGROUND_MASK);
 }
 
 void DoMode(Mode& m, Screen& screen, const EditScheme& scheme)

@@ -37,7 +37,9 @@ void FillMessageWindow(Buffer& status, WORD wAttr, const std::wstring& msg)
 
 void FillStatusWindow(Buffer& status, const ModeEdit& ev, const EditScheme& scheme, const FileInfo& fileInfo, const std::vector<wchar_t>& chars)
 {
-    status.clear(scheme.wAttrStatus, L' ');
+    WORD wAttribute = 0;
+    scheme.wAttrStatus.apply(wAttribute);
+    status.clear(wAttribute, L' ');
 
     status.data[0].Char.UnicodeChar = L' ';
     if (fileInfo.exists && (fileInfo.stat.st_mode & _S_IWRITE) == 0)
@@ -68,12 +70,16 @@ void ModeStatus::Draw(Screen& screen, const EditScheme& scheme, bool /*focus*/) 
 {
     if (!error.empty())
     {
-        FillMessageWindow(buffer, scheme.wAttrError, error);
+        WORD wAttribute = 0;
+        scheme.wAttrError.apply(wAttribute);
+        FillMessageWindow(buffer, wAttribute, error);
         error.clear();
     }
     else if (!message.empty())
     {
-        FillMessageWindow(buffer, scheme.wAttrStatusFocus, message);
+        WORD wAttribute = 0;
+        scheme.wAttrStatusFocus.apply(wAttribute);
+        FillMessageWindow(buffer, wAttribute, message);
         message.clear();
     }
     else

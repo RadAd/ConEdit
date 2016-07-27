@@ -3,17 +3,44 @@
 
 struct Screen;
 
+class Attribute
+{
+public:
+    Attribute()
+        : wAttribute(0)
+        , wMask(0)
+    {
+
+    }
+
+    Attribute(WORD wAttribute, WORD wMask)
+        : wAttribute(wAttribute & wMask)
+        , wMask(~wMask)
+    {
+
+    }
+
+    void apply(WORD& w) const
+    {
+        w = (w & wMask) | wAttribute;
+    }
+
+private:
+    WORD wAttribute;
+    WORD wMask;
+};
+
 struct EditScheme
 {
     EditScheme(WORD wAttributes);
 
-    WORD wAttrDefault;
-    WORD wAttrSelected;
-    WORD wAttrWhiteSpace;
-    WORD wAttrNonPrint;
-    WORD wAttrStatus;
-    WORD wAttrStatusFocus;
-    WORD wAttrError;
+    Attribute wAttrDefault;
+    Attribute wAttrSelected;
+    Attribute wAttrWhiteSpace;
+    Attribute wAttrNonPrint;
+    Attribute wAttrStatus;
+    Attribute wAttrStatusFocus;
+    Attribute wAttrError;
 };
 
 class Mode
