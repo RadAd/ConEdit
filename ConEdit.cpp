@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <locale.h>
 
+#include "AboutMessage.H"
 #include "FileIO.h"
 #include "ConUtils.h"
 #include "TextUtils.h"
@@ -301,13 +302,8 @@ int wmain(int argc, const wchar_t* argv[])
     {
         if (argc < 2)
         {
-            HRSRC hResource = FindResource(NULL, MAKEINTRESOURCE(IDR_TEXT), RT_RCDATA);
-            if (hResource == NULL)
-                throw std::exception("Can't find resource");
-            DWORD size = SizeofResource(NULL, hResource);
-            HGLOBAL hResourceData = LoadResource(NULL, hResource);
-            const char* pData = static_cast<const char*>(LockResource(hResourceData));
-            printf("%.*s", size, pData);
+            DisplayAboutMessage(NULL);
+            DisplayResource(NULL, IDR_TEXT);
             return 1;
         }
 
