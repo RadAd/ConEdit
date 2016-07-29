@@ -1,8 +1,11 @@
 #include "TextUtils.h"
 #include "ConUtils.h"
 
+#include <map>
+
 struct EditScheme;
 struct FileInfo;
+class Attribute;
 
 struct Anchor
 {
@@ -71,6 +74,14 @@ inline bool operator!=(const Span& l, const Span& r)
     return !(l == r);
 }
 
+inline bool operator<(const Span& l, const Span& r)
+{
+    if (l.begin == r.begin)
+        return l.end < r.end;
+    else
+        return l.begin < r.begin;
+}
+
 struct UndoEntry
 {
     enum Type { U_INSERT, U_DELETE, U_DELETE_PRE };
@@ -134,6 +145,9 @@ public:
     void MoveCursor(size_t p, bool keepPivot);
     bool Find(const std::wstring& find, bool caseSensitive, bool forward, bool next);
 
+    void InsertAttribute(Span s, Attribute a);
+    void ClearAttributes() { attributes.clear(); }
+
     void MoveAnchorUp(size_t count, bool bMoveSelection);
     void MoveAnchorDown(size_t count, bool bMoveSelection);
 
@@ -184,6 +198,7 @@ private:
     std::vector<wchar_t> eol;
     Anchor anchor;
     Span selection;
+    std::map<Span, Attribute> attributes;
 
     bool showWhiteSpace;
     size_t tabSize;

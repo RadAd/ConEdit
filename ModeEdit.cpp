@@ -6,6 +6,10 @@
 #include "FileInfo.h"
 #include "BoyerMoore.h"
 
+// Note
+// The attribute span is not updated in the undo/redo stack.
+// This isn't an issue as the syntax highlighter recalculates it.
+
 std::vector<wchar_t> GetEOL(const std::vector<wchar_t>& chars)
 {
     size_t e = GetEndOfLine(chars, 0);
@@ -60,11 +64,18 @@ ModeEdit::ModeEdit(const COORD& bufferSize, bool edited, bool readOnly, std::vec
     , undoSaved(edited ? UINT_MAX : 0)
 {
     eol = GetEOL(chars);
+
+    // TODO Test - remove
+    //InsertAttribute(Span(10, 30), Attribute(FOREGROUND_RED | FOREGROUND_INTENSITY, FOREGROUND_MASK));
+    //InsertAttribute(Span(40, 50), Attribute(FOREGROUND_BLUE | FOREGROUND_INTENSITY, FOREGROUND_MASK));
+    //InsertAttribute(Span(10, 14), Attribute(FOREGROUND_RED | FOREGROUND_INTENSITY, FOREGROUND_MASK));
+    //InsertAttribute(Span(14, 18), Attribute(FOREGROUND_BLUE | FOREGROUND_INTENSITY, FOREGROUND_MASK));
 }
 
 void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
 {
     std::vector<CHAR_INFO>::iterator itW = buffer.data.begin();
+    std::map<Span, Attribute>::const_iterator itAttribute = attributes.begin();
     Anchor a = GetAnchor();
     for (SHORT Y = 0; Y < buffer.size.Y; ++Y)
     {
@@ -90,6 +101,8 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                 {
                     if (selection.isin(p - 1))
                         scheme.wAttrSelected.apply(itW->Attributes);
+                    if (itAttribute != attributes.end() && itAttribute->first.isin(p))
+                        itAttribute->second.apply(itW->Attributes);
                     --tab;
                 }
                 else
@@ -139,6 +152,10 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                     }
                     if (selection.isin(p))
                         scheme.wAttrSelected.apply(itW->Attributes);
+                    if (itAttribute != attributes.end() && itAttribute->first.end <= p)
+                        ++itAttribute;
+                    if (itAttribute != attributes.end() && itAttribute->first.isin(p))
+                        itAttribute->second.apply(itW->Attributes);
                     ++p;
                 }
             }
@@ -730,6 +747,12 @@ bool ModeEdit::Find(const std::wstring& find, bool caseSensitive, bool forward, 
     }
 }
 
+void ModeEdit::InsertAttribute(Span s, Attribute a)
+{
+    // TODO Erase ???
+    attributes[s] = a;
+}
+
 void ModeEdit::MakeCursorVisible()
 {
     anchor = MakeVisible(anchor, buffer.size, chars, tabSize, selection.end);
@@ -801,6 +824,53 @@ bool ModeEdit::Delete(Span span, bool pauseUndo)
 #endif
         MakeCursorVisible();
 
+        {   // Fix up attributes
+            std::map<Span, Attribute>::iterator it = attributes.lower_bound(span);
+            if (it != attributes.begin())
+            {
+                std::map<Span, Attribute>::iterator itPrev = std::prev(it);
+                if (itPrev->first.end > span.end)
+                {
+                    Span newspan = itPrev->first;
+                    Attribute a = itPrev->second;
+                    newspan.end -= span.length();
+                    attributes.erase(itPrev);
+                    attributes[newspan] = a;
+                }
+                else if (itPrev->first.end > span.begin)
+                {
+                    Span newspan = itPrev->first;
+                    Attribute a = itPrev->second;
+                    newspan.end = span.begin;
+                    attributes.erase(itPrev);
+                    attributes[newspan] = a;
+                }
+            }
+            while (it != attributes.end() && it->first.end < span.end)
+            {
+                it = attributes.erase(it);
+            }
+            if (it != attributes.end() && it->first.begin < span.end)
+            {
+                Span newspan = it->first;
+                Attribute a = it->second;
+                newspan.begin = span.begin;
+                newspan.end -= span.length();
+                it = attributes.erase(it);
+                if (newspan.end > newspan.begin)
+                    attributes[newspan] = a;
+            }
+            while (it != attributes.end())
+            {
+                Span newspan = it->first;
+                Attribute a = it->second;
+                newspan.begin -= span.length();
+                newspan.end -= span.length();
+                it = attributes.erase(it);
+                attributes[newspan] = a;
+            }
+        }
+
         if (moveStartLine)
             anchor.startLine = GetStartOfLine(chars, selection.begin);
         invalid = true;
@@ -845,6 +915,35 @@ void ModeEdit::Insert(size_t p, const std::vector<wchar_t>& s, bool pauseUndo)
     selection.end = span.Begin() + s.size();
     selection.begin = selection.end;
     MakeCursorVisible();
+
+    {   // Fix up attributes
+        std::map<Span, Attribute>::iterator itFound = attributes.lower_bound(span);
+        if (itFound != attributes.begin() && std::prev(itFound)->first.end > span.begin)
+            --itFound;
+        if (itFound != attributes.end())
+        {
+            std::map<Span, Attribute>::iterator it = std::prev(attributes.end());
+            while (it != itFound)
+            {
+                Span newspan = it->first;
+                Attribute a = it->second;
+                newspan.begin += s.size();
+                newspan.end += s.size();
+                attributes[newspan] = a;
+                it = std::prev(attributes.erase(it));
+            }
+
+            {
+                Span newspan = it->first;
+                Attribute a = it->second;
+                if (it->first.begin > p)
+                    newspan.begin += s.size();
+                newspan.end += s.size();
+                attributes[newspan] = a;
+                attributes.erase(it);
+            }
+        }
+    }
 
     invalid = true;
 }

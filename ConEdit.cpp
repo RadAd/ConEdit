@@ -30,6 +30,7 @@
 // Syntax highlighting
 // Caching offset to line number
 // Virtual offset in anchor?
+// Capture close by 'X' button
 
 void AssertMsg(const char* test, const char* msg, const char* file, int line)
 {
