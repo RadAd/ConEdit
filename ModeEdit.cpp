@@ -5,6 +5,8 @@
 #include "Mode.h"
 #include "FileInfo.h"
 #include "BoyerMoore.h"
+#include "..\SyntaxHighlighter\SyntaxHighlighterLib\include\Brush.h"
+#include "..\SyntaxHighlighter\SyntaxHighlighterLib\include\SyntaxHighlighter.h"
 
 // Note
 // The attribute span is not updated in the undo/redo stack.
@@ -57,6 +59,7 @@ ModeEdit::ModeEdit(const COORD& bufferSize, bool edited, bool readOnly, std::vec
     , readOnly(readOnly)
     , chars(chars)
     , selection(0, 0)
+    , brush(nullptr)
     , showWhiteSpace(false)
     , tabSize(4)
     , undoCurrent(0)
@@ -65,18 +68,25 @@ ModeEdit::ModeEdit(const COORD& bufferSize, bool edited, bool readOnly, std::vec
 {
     eol = GetEOL(chars);
 
-    // TODO Test - remove
-    //InsertAttribute(Span(10, 30), Attribute(FOREGROUND_RED | FOREGROUND_INTENSITY, FOREGROUND_MASK));
-    //InsertAttribute(Span(40, 50), Attribute(FOREGROUND_BLUE | FOREGROUND_INTENSITY, FOREGROUND_MASK));
-    //InsertAttribute(Span(10, 14), Attribute(FOREGROUND_RED | FOREGROUND_INTENSITY, FOREGROUND_MASK));
-    //InsertAttribute(Span(14, 18), Attribute(FOREGROUND_BLUE | FOREGROUND_INTENSITY, FOREGROUND_MASK));
+    brushScheme[Brush::PREPROCESSOR] = Attribute(FOREGROUND_INTENSITY, FOREGROUND_MASK);
+    brushScheme[Brush::COMMENTS] = Attribute(FOREGROUND_GREEN, FOREGROUND_MASK);
+    brushScheme[Brush::KEYWORD] = Attribute(FOREGROUND_BLUE | FOREGROUND_INTENSITY, FOREGROUND_MASK);
+    brushScheme[Brush::TYPE] = Attribute(FOREGROUND_BLUE | FOREGROUND_GREEN, FOREGROUND_MASK);
+    brushScheme[Brush::FUNCTION] = Attribute(FOREGROUND_RED | FOREGROUND_GREEN, FOREGROUND_MASK);
+    brushScheme[Brush::STRING] = Attribute(FOREGROUND_RED | FOREGROUND_BLUE, FOREGROUND_MASK);
+    brushScheme[Brush::VALUE] = Attribute(FOREGROUND_RED | FOREGROUND_BLUE, FOREGROUND_MASK);
+    //brushScheme[Brush::VARIABLE] = Attribute(   );
+    //brushScheme[Brush::CONSTANT] = Attribute(   );
+    //brushScheme[Brush::COLOR1] = Attribute(   );
+    //brushScheme[Brush::COLOR2] = Attribute(   );
+    //brushScheme[Brush::COLOR3] = Attribute(   );
 }
 
 void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
 {
     std::vector<CHAR_INFO>::iterator itW = buffer.data.begin();
-    std::map<Span, Attribute>::const_iterator itAttribute = attributes.begin();
     Anchor a = GetAnchor();
+    std::map<Span, Attribute>::const_iterator itAttribute = attributes.lower_bound(Span(a.startLine, a.startLine));
     for (SHORT Y = 0; Y < buffer.size.Y; ++Y)
     {
         size_t p = a.ToOffset(chars, tabSize);
@@ -152,7 +162,7 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                     }
                     if (selection.isin(p))
                         scheme.wAttrSelected.apply(itW->Attributes);
-                    if (itAttribute != attributes.end() && itAttribute->first.end <= p)
+                    while (itAttribute != attributes.end() && itAttribute->first.end <= p)
                         ++itAttribute;
                     if (itAttribute != attributes.end() && itAttribute->first.isin(p))
                         itAttribute->second.apply(itW->Attributes);
@@ -747,16 +757,34 @@ bool ModeEdit::Find(const std::wstring& find, bool caseSensitive, bool forward, 
     }
 }
 
-void ModeEdit::InsertAttribute(Span s, Attribute a)
-{
-    // TODO Erase ???
-    attributes[s] = a;
-}
-
 void ModeEdit::MakeCursorVisible()
 {
     anchor = MakeVisible(anchor, buffer.size, chars, tabSize, selection.end);
     invalid = true;
+}
+
+void ModeEdit::SetBrush(const Brush* b)
+{
+    brush = b;
+    ApplyBrush();
+}
+
+void ModeEdit::ApplyBrush()
+{
+    attributes.clear();
+    if (brush != nullptr)
+    {
+        SyntaxHighlighterMapT hl = SyntaxHighlighter(brush, chars);
+        for (const auto& d : hl)
+        {
+            Span s(d.first.start, d.first.end);
+            auto itScheme = brushScheme.find(d.second);
+            if (itScheme != brushScheme.end())
+                attributes[s] = itScheme->second;
+            else
+                attributes[s] = Attribute(BACKGROUND_RED | BACKGROUND_INTENSITY, BACKGROUND_MASK);
+        }
+    }
 }
 
 void ModeEdit::MoveAnchorUp(size_t count, bool bMoveSelection)
@@ -869,6 +897,7 @@ bool ModeEdit::Delete(Span span, bool pauseUndo)
                 it = attributes.erase(it);
                 attributes[newspan] = a;
             }
+            ApplyBrush();   // TODO Only apply near edit
         }
 
         if (moveStartLine)
@@ -943,6 +972,7 @@ void ModeEdit::Insert(size_t p, const std::vector<wchar_t>& s, bool pauseUndo)
                 attributes.erase(it);
             }
         }
+        ApplyBrush();   // TODO Only apply near edit
     }
 
     invalid = true;

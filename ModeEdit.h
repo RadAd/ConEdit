@@ -6,6 +6,7 @@
 struct EditScheme;
 struct FileInfo;
 class Attribute;
+class Brush;
 
 struct Anchor
 {
@@ -145,8 +146,7 @@ public:
     void MoveCursor(size_t p, bool keepPivot);
     bool Find(const std::wstring& find, bool caseSensitive, bool forward, bool next);
 
-    void InsertAttribute(Span s, Attribute a);
-    void ClearAttributes() { attributes.clear(); }
+    void SetBrush(const Brush* b);
 
     void MoveAnchorUp(size_t count, bool bMoveSelection);
     void MoveAnchorDown(size_t count, bool bMoveSelection);
@@ -193,12 +193,16 @@ public:
 private:
     void FillCharsWindow(const EditScheme& scheme, COORD& cursor) const;
     void MakeCursorVisible();
+    void ApplyBrush();
 
     std::vector<wchar_t>& chars;
     std::vector<wchar_t> eol;
     Anchor anchor;
     Span selection;
     std::map<Span, Attribute> attributes;
+
+    const Brush* brush;
+    std::map<const wchar_t*, Attribute> brushScheme;
 
     bool showWhiteSpace;
     size_t tabSize;

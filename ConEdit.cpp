@@ -12,6 +12,7 @@
 #include "ModeEdit.h"
 #include "ModeStatus.h"
 #include "ModeFind.h"
+#include "..\SyntaxHighlighter\SyntaxHighlighterLib\include\SyntaxHighlighterBrushes.h"
 
 #include "resource.h"
 
@@ -63,6 +64,12 @@ public:
         , mf(this, _COORD(20, 1), _COORD(me.buffer.size.X - 20, 0), FindCB, this)
         , l(l)
     {
+        const wchar_t* ext = wcsrchr(fileInfo.filename, L'.');
+        if (ext != nullptr)
+        {
+            const Brush* b = brushes.getBrushByExtension(ext + 1);
+            me.SetBrush(b);
+        }
     }
 
     void Draw(Screen& screen, const EditScheme& scheme, bool focus) const
@@ -295,6 +302,7 @@ private:
     ModeStatus ms;
     ModeFind mf;
     _locale_t l;
+    SyntaxHighlighterBrushes brushes;
 };
 
 int wmain(int argc, const wchar_t* argv[])

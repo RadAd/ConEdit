@@ -1,9 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConEdit", "ConEdit.vcxproj", "{D91438E9-7AB0-4578-B725-2E2588C33351}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A2881A4C-9B10-487D-89A9-379C3EC0B221} = {A2881A4C-9B10-487D-89A9-379C3EC0B221}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntaxHighlighterLib", "..\SyntaxHighlighter\SyntaxHighlighterLib\SyntaxHighlighterLib.vcxproj", "{A2881A4C-9B10-487D-89A9-379C3EC0B221}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +26,14 @@ Global
 		{D91438E9-7AB0-4578-B725-2E2588C33351}.Release|x64.Build.0 = Release|x64
 		{D91438E9-7AB0-4578-B725-2E2588C33351}.Release|x86.ActiveCfg = Release|Win32
 		{D91438E9-7AB0-4578-B725-2E2588C33351}.Release|x86.Build.0 = Release|Win32
+		{A2881A4C-9B10-487D-89A9-379C3EC0B221}.Debug|x64.ActiveCfg = Debug|x64
+		{A2881A4C-9B10-487D-89A9-379C3EC0B221}.Debug|x64.Build.0 = Debug|x64
+		{A2881A4C-9B10-487D-89A9-379C3EC0B221}.Debug|x86.ActiveCfg = Debug|Win32
+		{A2881A4C-9B10-487D-89A9-379C3EC0B221}.Debug|x86.Build.0 = Debug|Win32
+		{A2881A4C-9B10-487D-89A9-379C3EC0B221}.Release|x64.ActiveCfg = Release|x64
+		{A2881A4C-9B10-487D-89A9-379C3EC0B221}.Release|x64.Build.0 = Release|x64
+		{A2881A4C-9B10-487D-89A9-379C3EC0B221}.Release|x86.ActiveCfg = Release|Win32
+		{A2881A4C-9B10-487D-89A9-379C3EC0B221}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
