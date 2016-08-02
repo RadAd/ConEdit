@@ -90,6 +90,16 @@ inline SMALL_RECT Rectangle(COORD topleft, COORD size)
     return r;
 }
 
+inline bool operator==(SMALL_RECT a, SMALL_RECT b)
+{
+    return a.Left == b.Left && a.Top == b.Top && a.Right == b.Right && a.Bottom == b.Bottom;
+}
+
+inline bool operator!=(SMALL_RECT a, SMALL_RECT b)
+{
+    return a.Left != b.Left || a.Top != b.Top || a.Right != b.Right || a.Bottom != b.Bottom;
+}
+
 void SetCursorVisible(HANDLE hScreen, CONSOLE_CURSOR_INFO& cci, BOOL bVisible);
 
 struct Buffer
@@ -162,6 +172,14 @@ public:
     ~AutoRestoreBufferInfo()
     {
         SetConsoleScreenBufferInfoEx(hHandle, &csbi);
+
+        // A bug that seems to not set the window correctly
+        CONSOLE_SCREEN_BUFFER_INFO csbit;
+        GetConsoleScreenBufferInfo(hHandle, &csbit);
+        if (csbit.srWindow != csbi.srWindow)
+        {
+            SetConsoleWindowInfo(hHandle, TRUE, &csbi.srWindow);
+        }
     }
 
     const CONSOLE_SCREEN_BUFFER_INFOEX& get() const { return csbi; }
