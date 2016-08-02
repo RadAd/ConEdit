@@ -824,6 +824,11 @@ void ModeEdit::SetBrush(const Brush* b)
     ApplyBrush();
 }
 
+const wchar_t* ModeEdit::GetBrushName() const
+{
+    return brush->getName();
+}
+
 void ModeEdit::ApplyBrush()
 {
     attributes.clear();

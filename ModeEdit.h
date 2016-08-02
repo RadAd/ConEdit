@@ -148,6 +148,7 @@ public:
 
     void LoadTheme(HKEY hKey);
     void SetBrush(const Brush* b);
+    const wchar_t* GetBrushName() const;
 
     void MoveAnchorUp(size_t count, bool bMoveSelection);
     void MoveAnchorDown(size_t count, bool bMoveSelection);

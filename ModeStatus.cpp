@@ -56,11 +56,13 @@ void FillStatusWindow(Buffer& status, const ModeEdit& ev, const EditScheme& sche
         const size_t line = GetLine(chars, a.startLine);
         const size_t len = ev.Selection().length();
         const wchar_t* eolName = GetEOLName(ev.Eol());
+        const wchar_t* brushName = ev.GetBrushName();
+        if (brushName == nullptr) brushName = L"";
         wchar_t msg[32];
         if (len == 0)
-            swprintf_s(msg, L"%s %s %Iu,%Iu", bomName[fileInfo.bom], eolName, line, a.column + 1);
+            swprintf_s(msg, L"%s %s %s %Iu,%Iu", brushName, bomName[fileInfo.bom], eolName, line, a.column + 1);
         else
-            swprintf_s(msg, L"%s %s [%Iu] %Iu,%Iu", bomName[fileInfo.bom], eolName, len, line, a.column + 1);
+            swprintf_s(msg, L"%s %s %s [%Iu] %Iu,%Iu", brushName, bomName[fileInfo.bom], eolName, len, line, a.column + 1);
 
         WriteEnd(status, _COORD(status.size.X - 2, 0), msg);
     }
