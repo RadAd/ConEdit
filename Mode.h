@@ -41,7 +41,8 @@ public:
     static const wchar_t* NONPRINT;
     static const wchar_t* STATUS;
     static const wchar_t* STATUSFOCUS;
-    static const wchar_t* ERROR_;
+    static const wchar_t* STATUSERROR;
+    static const wchar_t* STATUSWARNING;
 
     EditScheme(HKEY hKey, CONSOLE_SCREEN_BUFFER_INFOEX& csbi);
 

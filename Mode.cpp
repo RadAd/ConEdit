@@ -10,7 +10,8 @@ const wchar_t* EditScheme::WHITESPACE = L"Whitespace";
 const wchar_t* EditScheme::NONPRINT = L"NonPrint";
 const wchar_t* EditScheme::STATUS = L"Status";
 const wchar_t* EditScheme::STATUSFOCUS = L"StatusFocus";
-const wchar_t* EditScheme::ERROR_ = L"Error";
+const wchar_t* EditScheme::STATUSERROR = L"StatusError";
+const wchar_t* EditScheme::STATUSWARNING = L"StatusWarning";
 
 EditScheme::EditScheme(HKEY hKey, CONSOLE_SCREEN_BUFFER_INFOEX& csbi)
 {
@@ -20,7 +21,8 @@ EditScheme::EditScheme(HKEY hKey, CONSOLE_SCREEN_BUFFER_INFOEX& csbi)
     attr[NONPRINT] = Attribute(BACKGROUND_BLACK | FOREGROUND_WHITE | COMMON_LVB_REVERSE_VIDEO, FOREGROUND_MASK | BACKGROUND_MASK | COMMON_LVB_REVERSE_VIDEO);
     attr[STATUS] = Attribute(BACKGROUND_LGREY | FOREGROUND_BLACK, FOREGROUND_MASK | BACKGROUND_MASK);
     attr[STATUSFOCUS] = Attribute(BACKGROUND_BLUE | FOREGROUND_WHITE, FOREGROUND_MASK | BACKGROUND_MASK);
-    attr[ERROR_] = Attribute(BACKGROUND_RED | FOREGROUND_WHITE, FOREGROUND_MASK | BACKGROUND_MASK);
+    attr[STATUSERROR] = Attribute(BACKGROUND_RED | FOREGROUND_WHITE, FOREGROUND_MASK | BACKGROUND_MASK);
+    attr[STATUSWARNING] = Attribute(BACKGROUND_BLUE | FOREGROUND_WHITE, FOREGROUND_MASK | BACKGROUND_MASK);
 
     if (hKey != NULL)
     {
@@ -53,7 +55,8 @@ EditScheme::EditScheme(HKEY hKey, CONSOLE_SCREEN_BUFFER_INFOEX& csbi)
                         NONPRINT,
                         STATUS,
                         STATUSFOCUS,
-                        ERROR_,
+                        STATUSERROR,
+                        STATUSWARNING,
                     };
                     for (const wchar_t* name : names)
                     {

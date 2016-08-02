@@ -71,14 +71,14 @@ void ModeStatus::Draw(Screen& screen, const EditScheme& scheme, bool /*focus*/) 
     if (!error.empty())
     {
         WORD wAttribute = 0;
-        scheme.get(EditScheme::ERROR_).apply(wAttribute);
+        scheme.get(EditScheme::STATUSERROR).apply(wAttribute);
         FillMessageWindow(buffer, wAttribute, error);
         error.clear();
     }
     else if (!message.empty())
     {
         WORD wAttribute = 0;
-        scheme.get(EditScheme::STATUSFOCUS).apply(wAttribute);
+        scheme.get(EditScheme::STATUSWARNING).apply(wAttribute);
         FillMessageWindow(buffer, wAttribute, message);
         message.clear();
     }
