@@ -3,7 +3,7 @@
 
 #include <map>
 
-struct EditScheme;
+class EditScheme;
 struct FileInfo;
 class Attribute;
 class Brush;
@@ -146,6 +146,7 @@ public:
     void MoveCursor(size_t p, bool keepPivot);
     bool Find(const std::wstring& find, bool caseSensitive, bool forward, bool next);
 
+    void LoadTheme(HKEY hKey);
     void SetBrush(const Brush* b);
 
     void MoveAnchorUp(size_t count, bool bMoveSelection);
@@ -202,7 +203,7 @@ private:
     std::map<Span, Attribute> attributes;
 
     const Brush* brush;
-    std::map<const wchar_t*, Attribute> brushScheme;
+    std::map<const wchar_t*, Attribute> brushTheme;
 
     bool showWhiteSpace;
     size_t tabSize;

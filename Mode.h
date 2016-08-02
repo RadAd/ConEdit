@@ -1,6 +1,8 @@
 #ifndef MODE_H
 #define MODE_H
 
+#include <map>
+
 struct Screen;
 
 class Attribute
@@ -30,17 +32,24 @@ private:
     WORD wMask;
 };
 
-struct EditScheme
+class EditScheme
 {
-    EditScheme(WORD wAttributes);
+public:
+    static const wchar_t* DEFAULT;
+    static const wchar_t* SELECTED;
+    static const wchar_t* WHITESPACE;
+    static const wchar_t* NONPRINT;
+    static const wchar_t* STATUS;
+    static const wchar_t* STATUSFOCUS;
+    static const wchar_t* ERROR_;
 
-    Attribute wAttrDefault;
-    Attribute wAttrSelected;
-    Attribute wAttrWhiteSpace;
-    Attribute wAttrNonPrint;
-    Attribute wAttrStatus;
-    Attribute wAttrStatusFocus;
-    Attribute wAttrError;
+    EditScheme(HKEY hKey, CONSOLE_SCREEN_BUFFER_INFOEX& csbi);
+
+    Attribute get(const wchar_t* s) const;
+    void put(const wchar_t* s, const Attribute& a) { attr[s] = a; }
+
+private:
+    std::map<const wchar_t*, Attribute> attr;
 };
 
 class Mode

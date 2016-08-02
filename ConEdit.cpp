@@ -54,7 +54,8 @@ std::wstring convert(const char* m, _locale_t l)
 class ModeConEdit : public Mode
 {
 public:
-    ModeConEdit(FileInfo& fileInfo,
+    ModeConEdit(HKEY hKey,
+        FileInfo& fileInfo,
         COORD size,
         std::vector<wchar_t>& chars,
         _locale_t l)
@@ -64,6 +65,7 @@ public:
         , mf(this, _COORD(20, 1), _COORD(me.buffer.size.X - 20, 0), FindCB, this)
         , l(l)
     {
+        me.LoadTheme(hKey);
         const wchar_t* ext = wcsrchr(fileInfo.filename, L'.');
         if (ext != nullptr)
         {
@@ -329,11 +331,25 @@ int wmain(int argc, const wchar_t* argv[])
 
         Screen screen(screenOrig);
         screen.hOut = CreateScreen(screen.csbi.srWindow);
+
+        HKEY hKey = NULL;
+        RegOpenKey(HKEY_CURRENT_USER, L"SOFTWARE\\RadSoft\\ConEdit", &hKey);
+
+        CONSOLE_SCREEN_BUFFER_INFOEX csbi = { sizeof(CONSOLE_SCREEN_BUFFER_INFOEX) };
+        GetConsoleScreenBufferInfoEx(screen.hOut, &csbi);
+
+        EditScheme scheme(hKey, csbi);
+
+        csbi.wAttributes = 0;
+        scheme.get(EditScheme::DEFAULT).apply(csbi.wAttributes);
+        SetConsoleScreenBufferInfoEx(screen.hOut, &csbi);
+
         AutoRestoreActiveScreenBuffer arasb(screenOrig.hOut, screen.hOut);
 
-        EditScheme scheme(screen.csbi.wAttributes);
+        ModeConEdit mce(hKey, fileInfo, GetSize(screen.csbi.srWindow), chars, l);
 
-        ModeConEdit mce(fileInfo, GetSize(screen.csbi.srWindow), chars, l);
+        RegCloseKey(hKey);
+        hKey = NULL;
 
         DoMode(mce, screen, scheme);
 

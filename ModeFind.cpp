@@ -14,7 +14,7 @@ void ModeFind::Draw(Screen& screen, const EditScheme& scheme, bool focus) const
     if (visible)
     {
         WORD wAttribute = 0;
-        (focus ? scheme.wAttrStatusFocus : scheme.wAttrStatus).apply(wAttribute);
+        scheme.get(focus ? EditScheme::STATUSFOCUS : EditScheme::STATUS).apply(wAttribute);
         FillMessageWindow(buffer, wAttribute, find);
         DrawBuffer(screen.hOut, buffer, pos);
 

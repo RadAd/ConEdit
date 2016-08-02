@@ -68,22 +68,29 @@ ModeEdit::ModeEdit(const COORD& bufferSize, bool edited, bool readOnly, std::vec
 {
     eol = GetEOL(chars);
 
-    brushScheme[Brush::PREPROCESSOR] = Attribute(FOREGROUND_INTENSITY, FOREGROUND_MASK);
-    brushScheme[Brush::COMMENTS] = Attribute(FOREGROUND_GREEN, FOREGROUND_MASK);
-    brushScheme[Brush::KEYWORD] = Attribute(FOREGROUND_BLUE | FOREGROUND_INTENSITY, FOREGROUND_MASK);
-    brushScheme[Brush::TYPE] = Attribute(FOREGROUND_BLUE | FOREGROUND_GREEN, FOREGROUND_MASK);
-    brushScheme[Brush::FUNCTION] = Attribute(FOREGROUND_RED | FOREGROUND_GREEN, FOREGROUND_MASK);
-    brushScheme[Brush::STRING] = Attribute(FOREGROUND_RED | FOREGROUND_BLUE, FOREGROUND_MASK);
-    brushScheme[Brush::VALUE] = Attribute(FOREGROUND_RED | FOREGROUND_BLUE, FOREGROUND_MASK);
-    //brushScheme[Brush::VARIABLE] = Attribute(   );
-    //brushScheme[Brush::CONSTANT] = Attribute(   );
-    //brushScheme[Brush::COLOR1] = Attribute(   );
-    //brushScheme[Brush::COLOR2] = Attribute(   );
-    //brushScheme[Brush::COLOR3] = Attribute(   );
+#if 0
+    brushTheme[Brush::PREPROCESSOR] = Attribute(FOREGROUND_INTENSITY, FOREGROUND_MASK);
+    brushTheme[Brush::COMMENTS] = Attribute(FOREGROUND_GREEN, FOREGROUND_MASK);
+    brushTheme[Brush::KEYWORD] = Attribute(FOREGROUND_BLUE | FOREGROUND_INTENSITY, FOREGROUND_MASK);
+    brushTheme[Brush::TYPE] = Attribute(FOREGROUND_BLUE | FOREGROUND_GREEN, FOREGROUND_MASK);
+    brushTheme[Brush::FUNCTION] = Attribute(FOREGROUND_RED | FOREGROUND_GREEN, FOREGROUND_MASK);
+    brushTheme[Brush::STRING] = Attribute(FOREGROUND_RED | FOREGROUND_BLUE, FOREGROUND_MASK);
+    brushTheme[Brush::VALUE] = Attribute(FOREGROUND_RED | FOREGROUND_BLUE, FOREGROUND_MASK);
+    //brushTheme[Brush::VARIABLE] = Attribute(   );
+    //brushTheme[Brush::CONSTANT] = Attribute(   );
+    //brushTheme[Brush::COLOR1] = Attribute(   );
+    //brushTheme[Brush::COLOR2] = Attribute(   );
+    //brushTheme[Brush::COLOR3] = Attribute(   );
+#endif
 }
 
 void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
 {
+    Attribute wAttrDefault = scheme.get(EditScheme::DEFAULT);
+    Attribute wAttrSelected = scheme.get(EditScheme::SELECTED);
+    Attribute wAttrWhiteSpace = scheme.get(EditScheme::WHITESPACE);
+    Attribute wAttrNonPrint = scheme.get(EditScheme::NONPRINT);
+
     std::vector<CHAR_INFO>::iterator itW = buffer.data.begin();
     Anchor a = GetAnchor();
     std::map<Span, Attribute>::const_iterator itAttribute = attributes.lower_bound(Span(a.startLine, a.startLine));
@@ -96,7 +103,7 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
         for (SHORT X = 0; X < buffer.size.X; ++X)
         {
             itW->Attributes = 0;
-            scheme.wAttrDefault.apply(itW->Attributes);
+            wAttrDefault.apply(itW->Attributes);
             itW->Char.UnicodeChar = L' ';
             if (p == selection.end && !PastEOL)
             {
@@ -109,18 +116,22 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
             {
                 if (tab > 0)
                 {
-                    if (selection.isin(p - 1))
-                        scheme.wAttrSelected.apply(itW->Attributes);
                     if (itAttribute != attributes.end() && itAttribute->first.isin(p))
                         itAttribute->second.apply(itW->Attributes);
+                    if (selection.isin(p - 1))
+                        wAttrSelected.apply(itW->Attributes);
                     --tab;
                 }
                 else
                 {
+                    while (itAttribute != attributes.end() && itAttribute->first.end <= p)
+                        ++itAttribute;
+                    if (itAttribute != attributes.end() && itAttribute->first.isin(p))
+                        itAttribute->second.apply(itW->Attributes);
                     if (p >= chars.size())
                     {
                         itW->Char.UnicodeChar = L'~';
-                        scheme.wAttrWhiteSpace.apply(itW->Attributes);
+                        wAttrWhiteSpace.apply(itW->Attributes);
                     }
 #if 1
                     else if (chars[p] == L'\t')
@@ -128,7 +139,7 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                         if (showWhiteSpace)
                         {
                             itW->Char.UnicodeChar = L'¬';
-                            scheme.wAttrWhiteSpace.apply(itW->Attributes);
+                            wAttrWhiteSpace.apply(itW->Attributes);
                         }
                         tab = tabSize - 1 - ((a.column + X) % tabSize);
                     }
@@ -138,7 +149,7 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                         if (showWhiteSpace)
                         {
                             itW->Char.UnicodeChar = L'·';
-                            scheme.wAttrWhiteSpace.apply(itW->Attributes);
+                            wAttrWhiteSpace.apply(itW->Attributes);
                         }
                     }
                     else if (iswspace(chars[p]))
@@ -146,7 +157,7 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                         if (showWhiteSpace)
                         {
                             itW->Char.UnicodeChar = L'¶';
-                            scheme.wAttrWhiteSpace.apply(itW->Attributes);
+                            wAttrWhiteSpace.apply(itW->Attributes);
                         }
                     }
                     else if (iswprint(chars[p])) // TODO Use locale?
@@ -158,14 +169,10 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                         case 27: itW->Char.UnicodeChar = L'E'; break;   // Escape
                         default: itW->Char.UnicodeChar = L'¿'; break;
                         }
-                        scheme.wAttrNonPrint.apply(itW->Attributes);
+                        wAttrNonPrint.apply(itW->Attributes);
                     }
                     if (selection.isin(p))
-                        scheme.wAttrSelected.apply(itW->Attributes);
-                    while (itAttribute != attributes.end() && itAttribute->first.end <= p)
-                        ++itAttribute;
-                    if (itAttribute != attributes.end() && itAttribute->first.isin(p))
-                        itAttribute->second.apply(itW->Attributes);
+                        wAttrSelected.apply(itW->Attributes);
                     ++p;
                 }
             }
@@ -763,6 +770,54 @@ void ModeEdit::MakeCursorVisible()
     invalid = true;
 }
 
+void ModeEdit::LoadTheme(HKEY hKey)
+{
+    brushTheme.clear();
+    if (hKey != NULL)
+    {
+        HKEY hThemeKey = NULL;
+        RegOpenKey(hKey, L"Theme", &hThemeKey);
+        if (hThemeKey != NULL)
+        {
+            wchar_t Theme[256];
+            LONG size = ARRAYSIZE(Theme) * sizeof(wchar_t);
+            if (RegQueryValue(hThemeKey, nullptr, Theme, &size) == ERROR_SUCCESS)
+            {
+                HKEY hSubThemeKey = NULL;
+                RegOpenKey(hThemeKey, Theme, &hSubThemeKey);
+                if (hSubThemeKey != NULL && hSubThemeKey != hThemeKey)
+                {
+                    const wchar_t* names[] = {
+                        Brush::PREPROCESSOR,
+                        Brush::COMMENTS,
+                        Brush::KEYWORD,
+                        Brush::TYPE,
+                        Brush::FUNCTION,
+                        Brush::STRING,
+                        Brush::VALUE,
+                        Brush::VARIABLE,
+                        Brush::CONSTANT,
+                        Brush::COLOR1,
+                        Brush::COLOR2,
+                        Brush::COLOR3,
+                    };
+                    for (const wchar_t* name : names)
+                    {
+                        DWORD Value = 0;
+                        DWORD Size = sizeof(Value);
+                        if (RegQueryValueEx(hSubThemeKey, name, nullptr, nullptr, (LPBYTE) &Value, &Size) == ERROR_SUCCESS)
+                            brushTheme[name] = Attribute(Value & 0xFFFF, (Value >> (sizeof(WORD) * 8)) & 0xFFFF);
+                    }
+
+                    RegCloseKey(hSubThemeKey);
+                }
+            }
+
+            RegCloseKey(hThemeKey);
+        }
+    }
+}
+
 void ModeEdit::SetBrush(const Brush* b)
 {
     brush = b;
@@ -777,12 +832,11 @@ void ModeEdit::ApplyBrush()
         SyntaxHighlighterMapT hl = SyntaxHighlighter(brush, chars);
         for (const auto& d : hl)
         {
-            Span s(d.first.start, d.first.end);
-            auto itScheme = brushScheme.find(d.second);
-            if (itScheme != brushScheme.end())
-                attributes[s] = itScheme->second;
-            else
-                attributes[s] = Attribute(BACKGROUND_RED | BACKGROUND_INTENSITY, BACKGROUND_MASK);
+            auto itScheme = brushTheme.find(d.second);
+            if (itScheme != brushTheme.end())
+                attributes[Span(d.first.start, d.first.end)] = itScheme->second;
+            //else
+                //attributes[s] = Attribute(BACKGROUND_RED | BACKGROUND_INTENSITY, BACKGROUND_MASK);
         }
     }
 }

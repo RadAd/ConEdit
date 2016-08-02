@@ -1,7 +1,7 @@
 #include "ConUtils.h"
 #include "Mode.h"
 
-struct EditScheme;
+class EditScheme;
 
 typedef void(*findcb)(void* data, bool forward, bool next);
 
