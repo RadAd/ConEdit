@@ -58,7 +58,7 @@ void FillStatusWindow(Buffer& status, const ModeEdit& ev, const EditScheme& sche
         const wchar_t* eolName = GetEOLName(ev.Eol());
         const wchar_t* brushName = ev.GetBrushName();
         if (brushName == nullptr) brushName = L"";
-        wchar_t msg[32];
+        wchar_t msg[256];
         if (len == 0)
             swprintf_s(msg, L"%s %s %s %Iu,%Iu", brushName, bomName[fileInfo.bom], eolName, line, a.column + 1);
         else

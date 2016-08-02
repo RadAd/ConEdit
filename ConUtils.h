@@ -90,7 +90,6 @@ inline SMALL_RECT Rectangle(COORD topleft, COORD size)
     return r;
 }
 
-HANDLE CreateScreen(SMALL_RECT rect);
 void SetCursorVisible(HANDLE hScreen, CONSOLE_CURSOR_INFO& cci, BOOL bVisible);
 
 struct Buffer
@@ -148,6 +147,28 @@ public:
 private:
     HANDLE hHandle;
     DWORD mode;
+};
+
+class AutoRestoreBufferInfo
+{
+public:
+    AutoRestoreBufferInfo(HANDLE h)
+        : hHandle(h)
+    {
+        csbi.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
+        GetConsoleScreenBufferInfoEx(hHandle, &csbi);
+    }
+
+    ~AutoRestoreBufferInfo()
+    {
+        SetConsoleScreenBufferInfoEx(hHandle, &csbi);
+    }
+
+    const CONSOLE_SCREEN_BUFFER_INFOEX& get() const { return csbi; }
+
+private:
+    HANDLE hHandle;
+    CONSOLE_SCREEN_BUFFER_INFOEX csbi;
 };
 
 class AutoRestoreActiveScreenBuffer

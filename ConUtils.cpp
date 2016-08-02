@@ -20,13 +20,6 @@ void CopyToClipboard(const wchar_t* pSrc, size_t len)
     }
 }
 
-HANDLE CreateScreen(SMALL_RECT rect)
-{
-    HANDLE hScreen = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, CONSOLE_TEXTMODE_BUFFER, nullptr);
-    SetConsoleScreenBufferSize(hScreen, GetSize(rect));
-    return hScreen;
-}
-
 void SetCursorVisible(HANDLE hScreen, CONSOLE_CURSOR_INFO& cci, BOOL bVisible)
 {
     if (cci.bVisible != bVisible)
@@ -64,6 +57,7 @@ void WriteBegin(Buffer& b, COORD o, const wchar_t* s)
 void WriteEnd(Buffer& b, COORD o, const wchar_t* s)
 {
     // TODO Check bounds
-    auto it = b.data.begin() + b.offset(o) - wcslen(s);
+    size_t offset = wcslen(s) < b.offset(o) ? b.offset(o) - wcslen(s) : 0;
+    auto it = b.data.begin() + offset;
     Write(it, b.data.end(), s);
 }

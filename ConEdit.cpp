@@ -326,18 +326,18 @@ int wmain(int argc, const wchar_t* argv[])
             chars = fileInfo.load(l);
 
         const Screen screenOrig;
+        AutoRestoreBufferInfo arbi(screenOrig.hOut);
         AutoRestoreMode armIn(screenOrig.hIn, ENABLE_EXTENDED_FLAGS | ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT, 0);
         AutoRestoreMode armOut(screenOrig.hOut, 0, static_cast<WORD>(~(ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT)));
 
         Screen screen(screenOrig);
-        screen.hOut = CreateScreen(screen.csbi.srWindow);
+        screen.hOut = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, CONSOLE_TEXTMODE_BUFFER, nullptr);
 
         HKEY hKey = NULL;
         RegOpenKey(HKEY_CURRENT_USER, L"SOFTWARE\\RadSoft\\ConEdit", &hKey);
 
-        CONSOLE_SCREEN_BUFFER_INFOEX csbi = { sizeof(CONSOLE_SCREEN_BUFFER_INFOEX) };
-        GetConsoleScreenBufferInfoEx(screen.hOut, &csbi);
-
+        CONSOLE_SCREEN_BUFFER_INFOEX csbi = arbi.get();
+        csbi.dwSize = GetSize(screen.csbi.srWindow);
         EditScheme scheme(hKey, csbi);
 
         csbi.wAttributes = 0;
