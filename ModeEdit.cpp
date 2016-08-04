@@ -821,7 +821,7 @@ void ModeEdit::LoadTheme(HKEY hKey)
 void ModeEdit::SetBrush(const Brush* b)
 {
     brush = b;
-    ApplyBrush();
+    ApplyBrush(Span(0, chars.size()));
 }
 
 const wchar_t* ModeEdit::GetBrushName() const
@@ -829,12 +829,32 @@ const wchar_t* ModeEdit::GetBrushName() const
     return brush->getName();
 }
 
-void ModeEdit::ApplyBrush()
+void ModeEdit::ApplyBrush(Span s)
 {
-    attributes.clear();
+    //attributes.clear();
+    if (s.begin < 80)
+        s.begin = 0;
+    else
+        s.begin -= 80;
+    s.end += 80;
+    if (s.end > chars.size())
+        s.end = chars.size();
+    auto itLower = attributes.lower_bound(s);
+    if (itLower != attributes.begin() && std::prev(itLower)->first.end > s.begin)
+    {
+        --itLower;
+        s.begin = itLower->first.begin;
+    }
+    auto itUpper = attributes.upper_bound(Span(s.end, s.end));
+    if (itUpper != attributes.begin() && std::prev(itUpper)->first.end > s.end)
+    {
+        s.end = std::prev(itUpper)->first.end;
+    }
+    attributes.erase(itLower, itUpper);
+
     if (brush != nullptr)
     {
-        SyntaxHighlighterMapT hl = SyntaxHighlighter(brush, chars);
+        SyntaxHighlighterMapT hl = SyntaxHighlighter(brush, chars, s.begin, s.end);
         for (const auto& d : hl)
         {
             auto itScheme = brushTheme.find(d.second);
@@ -956,7 +976,7 @@ bool ModeEdit::Delete(Span span, bool pauseUndo)
                 it = attributes.erase(it);
                 attributes[newspan] = a;
             }
-            ApplyBrush();   // TODO Only apply near edit
+            ApplyBrush(Span(span.begin, span.begin));
         }
 
         if (moveStartLine)
@@ -1031,7 +1051,7 @@ void ModeEdit::Insert(size_t p, const std::vector<wchar_t>& s, bool pauseUndo)
                 attributes.erase(it);
             }
         }
-        ApplyBrush();   // TODO Only apply near edit
+        ApplyBrush(Span(span.begin, span.begin + s.size()));
     }
 
     invalid = true;

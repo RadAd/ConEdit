@@ -1,4 +1,5 @@
 #include "algostuff.hpp"
+
 using namespace std;
 
 bool bothEvenOrOdd (int elem1, int elem2)

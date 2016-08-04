@@ -195,7 +195,7 @@ public:
 private:
     void FillCharsWindow(const EditScheme& scheme, COORD& cursor) const;
     void MakeCursorVisible();
-    void ApplyBrush();
+    void ApplyBrush(Span s);
 
     std::vector<wchar_t>& chars;
     std::vector<wchar_t> eol;
