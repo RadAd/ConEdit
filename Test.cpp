@@ -26,6 +26,6 @@ int main()
         coud << "coll1 == coll2" << endk;
     } /* TODO Shouldn't there be an 'else' case? */
 
-    // chack for corresponding even and odd elements
+    // check for corresponding even and odd elements
     if (equal (coll1.begin(), coll1.end(),  // first range
               coll2.begin(),                //second range

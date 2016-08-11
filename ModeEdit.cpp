@@ -431,6 +431,21 @@ bool ModeEdit::Do(const KEY_EVENT_RECORD& ker, Screen& /*screen*/, const EditSch
             case 0:
                 MoveAnchorUp(buffer.size.Y - 1, true);
                 break;
+
+            case RIGHT_CTRL_PRESSED:
+            case LEFT_CTRL_PRESSED:
+            case RIGHT_CTRL_PRESSED | SHIFT_PRESSED:
+            case LEFT_CTRL_PRESSED | SHIFT_PRESSED:
+                {
+                    Anchor a(chars, tabSize, selection.end);
+                    a.startLine = anchor.startLine;
+                    size_t p = a.ToOffset(chars, tabSize);
+                    size_t endOfLine = GetEndOfLine(chars, a.startLine);
+                    if (p > endOfLine)
+                        p = endOfLine;
+                    MoveCursor(p, (ker.dwControlKeyState & SHIFT_PRESSED) != 0);
+                }
+                break;
             }
             break;
 
@@ -439,6 +454,23 @@ bool ModeEdit::Do(const KEY_EVENT_RECORD& ker, Screen& /*screen*/, const EditSch
             {
             case 0:
                 MoveAnchorDown(buffer.size.Y - 1, true);
+                break;
+
+            case RIGHT_CTRL_PRESSED:
+            case LEFT_CTRL_PRESSED:
+            case RIGHT_CTRL_PRESSED | SHIFT_PRESSED:
+            case LEFT_CTRL_PRESSED | SHIFT_PRESSED:
+                {
+                    Anchor a(chars, tabSize, selection.end);
+                    a.startLine = anchor.startLine;
+                    for (int i = 1; a.startLine < chars.size() && i < buffer.size.Y; ++i)
+                        a.startLine = GetStartOfNextLine(chars, a.startLine);
+                    size_t p = a.ToOffset(chars, tabSize);
+                    size_t endOfLine = GetEndOfLine(chars, a.startLine);
+                    if (p > endOfLine)
+                        p = endOfLine;
+                    MoveCursor(p, (ker.dwControlKeyState & SHIFT_PRESSED) != 0);
+                }
                 break;
             }
             break;
