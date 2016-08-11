@@ -1,4 +1,4 @@
-ConEdit
+![Icon](ConEdit.ico) ConEdit
 ==========
 
 A simple text editor for Windows console
