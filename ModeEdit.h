@@ -77,10 +77,16 @@ inline bool operator!=(const Span& l, const Span& r)
 
 inline bool operator<(const Span& l, const Span& r)
 {
+#if 0
     if (l.begin == r.begin)
         return l.end < r.end;
     else
         return l.begin < r.begin;
+#else
+    // This causes some confusion in the !(a < b) and !(b < a) does not mean they are equal
+    // It does gives the advantage that map.lower_bound give the overlapping entry
+    return l.end <= r.begin;
+#endif
 }
 
 struct UndoEntry

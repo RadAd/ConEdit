@@ -12,6 +12,111 @@
 // The attribute span is not updated in the undo/redo stack.
 // This isn't an issue as the syntax highlighter recalculates it.
 
+template<class V>
+bool MapSpanNotExist(std::map<Span, V>& map, const Span& span)
+{
+    auto itPair = map.equal_range(span);
+    return itPair.first == itPair.second;
+}
+
+template<class V>
+void MapSpanAdd(std::map<Span, V>& map, const Span& span, const V& value)
+{
+    assert(span.end > span.begin);
+    assert(MapSpanNotExist(map, span));
+    map[span] = value;
+}
+
+template<class V>
+typename std::map<Span, V>::iterator MapSpanMove(std::map<Span, V>& map, typename std::map<Span, V>::iterator e, const Span& span)
+{
+    assert(span.end > span.begin);
+    V v = e->second;
+    e = map.erase(e);
+    assert(MapSpanNotExist(map, span));
+    return map.insert(e, std::map<Span, V>::value_type(span, std::move(v)));
+}
+
+template<class V>
+void MapSpanCollapse(std::map<Span, V>& map, const Span& span)
+{
+    std::map<Span, V>::iterator e = map.lower_bound(span);
+    if (e != map.end() && e->first != span && e->first.begin < span.end && span.begin < e->first.end)
+    {
+        if (e->first.end > span.end)
+        {
+            if (span.begin > e->first.begin)
+            {
+                Span rn(e->first);
+                rn.end -= span.length();
+                assert(!rn.empty());
+                e = std::next(MapSpanMove(map, e, rn));
+            }
+            else
+            {
+                Span rn(e->first);
+                rn.begin = span.end;
+                rn.begin -= span.length();
+                rn.end -= span.length();
+                assert(!rn.empty());
+                e = std::next(MapSpanMove(map, e, rn));
+            }
+        }
+        else if (e->first.end > span.begin)
+        {
+            Span rn(e->first);
+            rn.end = span.begin;
+            if (rn.empty())
+                e = map.erase(e);
+            else
+                e = std::next(MapSpanMove(map, e, rn));
+        }
+    }
+    while (e != map.end() && e->first.end <= span.end)
+    {
+        e = map.erase(e);
+    }
+    if (e != map.end() && e->first.begin < span.end)
+    {
+        Span rn(e->first);
+        rn.begin = span.end;
+        rn.begin -= span.length();
+        rn.end -= span.length();
+        assert(!rn.empty());
+        e = std::next(MapSpanMove(map, e, rn));
+    }
+    while (e != map.end())
+    {
+        Span rn(e->first);
+        rn.begin -= span.length();
+        rn.end -= span.length();
+        e = std::next(MapSpanMove(map, e, rn));
+    }
+}
+
+template<class V>
+void MapSpanInflate(std::map<Span, V>& map, const Span& span)
+{
+    const std::map<Span, V>::iterator eFound = map.lower_bound(span);
+    if (eFound != map.end())
+    {
+        std::map<Span, V>::iterator e = std::prev(map.end());
+        while (e != eFound && e->first.begin >= span.begin)
+        {
+            Span rn(e->first);
+            rn.begin += span.length();
+            rn.end += span.length();
+            e = std::prev(MapSpanMove(map, e, rn));
+        }
+
+        Span rn(e->first);
+        if (rn.begin >= span.begin)
+            rn.begin += span.length();
+        rn.end += span.length();
+        e = std::prev(MapSpanMove(map, e, rn));
+    }
+}
+
 std::vector<wchar_t> GetEOL(const std::vector<wchar_t>& chars)
 {
     size_t e = GetEndOfLine(chars, 0);
@@ -839,18 +944,13 @@ void ModeEdit::ApplyBrush(Span s)
     s.end += 80;
     if (s.end > chars.size())
         s.end = chars.size();
-    auto itLower = attributes.lower_bound(s);
-    if (itLower != attributes.begin() && std::prev(itLower)->first.end > s.begin)
-    {
-        --itLower;
-        s.begin = itLower->first.begin;
-    }
-    auto itUpper = attributes.upper_bound(Span(s.end, s.end));
-    if (itUpper != attributes.begin() && std::prev(itUpper)->first.end > s.end)
-    {
-        s.end = std::prev(itUpper)->first.end;
-    }
-    attributes.erase(itLower, itUpper);
+
+    auto itPair = attributes.equal_range(s);
+    if (itPair.first != attributes.end() && itPair.first->first.begin < s.begin)
+        s.begin = itPair.first->first.begin;
+    if (itPair.second != attributes.begin() && std::prev(itPair.second)->first.end > s.end)
+        s.end = std::prev(itPair.second)->first.end;
+    attributes.erase(itPair.first, itPair.second);
 
     if (brush != nullptr)
     {
@@ -859,9 +959,9 @@ void ModeEdit::ApplyBrush(Span s)
         {
             auto itScheme = brushTheme.find(d.second);
             if (itScheme != brushTheme.end())
-                attributes[Span(d.first.start, d.first.end)] = itScheme->second;
+                MapSpanAdd(attributes, Span(d.first.begin, d.first.end), itScheme->second);
             //else
-                //attributes[s] = Attribute(BACKGROUND_RED | BACKGROUND_INTENSITY, BACKGROUND_MASK);
+                // MapSpanAdd(attributes, s, Attribute(BACKGROUND_RED | BACKGROUND_INTENSITY, BACKGROUND_MASK));
         }
     }
 }
@@ -905,79 +1005,36 @@ std::wstring ModeEdit::GetSelectedText() const
     return std::wstring(itBegin, itEnd);
 }
 
-bool ModeEdit::Delete(Span span, bool pauseUndo)
+bool ModeEdit::Delete(Span ospan, bool pauseUndo)
 {
-    if (!span.empty())
+    if (!ospan.empty())
     {
+        Span span(ospan.Begin(), ospan.End());
+
         bool moveStartLine = anchor.startLine > 0 && span.isin(anchor.startLine - 1);
 
-        std::vector<wchar_t>::iterator itBegin = chars.begin() + span.Begin();
-        std::vector<wchar_t>::iterator itEnd = chars.begin() + span.End();
+        std::vector<wchar_t>::iterator itBegin = chars.begin() + span.begin;
+        std::vector<wchar_t>::iterator itEnd = chars.begin() + span.end;
         if (!pauseUndo)
-            AddUndo(UndoEntry(UndoEntry::U_DELETE, span, selection, itBegin, itEnd));
+            AddUndo(UndoEntry(UndoEntry::U_DELETE, ospan, selection, itBegin, itEnd));
 
         chars.erase(itBegin, itEnd);
 #if 1
-        if (selection.begin >= span.End())
+        if (selection.begin >= span.end)
             selection.begin -= span.length();
-        else if (selection.begin >= span.Begin())
-            selection.begin = span.Begin();
-        if (selection.end >= span.End())
+        else if (selection.begin >= span.begin)
+            selection.begin = span.begin;
+        if (selection.end >= span.end)
             selection.end -= span.length();
-        else if (selection.end >= span.Begin())
-            selection.end = span.Begin();
+        else if (selection.end >= span.begin)
+            selection.end = span.begin;
 #else
-        selection.begin = selection.end = span.Begin();
+        selection.begin = selection.end = span.begin;
 #endif
         MakeCursorVisible();
 
-        {   // Fix up attributes
-            std::map<Span, Attribute>::iterator it = attributes.lower_bound(span);
-            if (it != attributes.begin())
-            {
-                std::map<Span, Attribute>::iterator itPrev = std::prev(it);
-                if (itPrev->first.end > span.end)
-                {
-                    Span newspan = itPrev->first;
-                    Attribute a = itPrev->second;
-                    newspan.end -= span.length();
-                    attributes.erase(itPrev);
-                    attributes[newspan] = a;
-                }
-                else if (itPrev->first.end > span.begin)
-                {
-                    Span newspan = itPrev->first;
-                    Attribute a = itPrev->second;
-                    newspan.end = span.begin;
-                    attributes.erase(itPrev);
-                    attributes[newspan] = a;
-                }
-            }
-            while (it != attributes.end() && it->first.end < span.end)
-            {
-                it = attributes.erase(it);
-            }
-            if (it != attributes.end() && it->first.begin < span.end)
-            {
-                Span newspan = it->first;
-                Attribute a = it->second;
-                newspan.begin = span.begin;
-                newspan.end -= span.length();
-                it = attributes.erase(it);
-                if (newspan.end > newspan.begin)
-                    attributes[newspan] = a;
-            }
-            while (it != attributes.end())
-            {
-                Span newspan = it->first;
-                Attribute a = it->second;
-                newspan.begin -= span.length();
-                newspan.end -= span.length();
-                it = attributes.erase(it);
-                attributes[newspan] = a;
-            }
-            ApplyBrush(Span(span.begin, span.begin));
-        }
+        MapSpanCollapse(attributes, span);
+        ApplyBrush(Span(span.begin, span.begin));
 
         if (moveStartLine)
             anchor.startLine = GetStartOfLine(chars, selection.begin);
@@ -1015,44 +1072,18 @@ void ModeEdit::Insert(const std::vector<wchar_t>& s)
 
 void ModeEdit::Insert(size_t p, const std::vector<wchar_t>& s, bool pauseUndo)
 {
-    Span span(p, p);
     if (!pauseUndo)
-        AddUndo(UndoEntry(UndoEntry::U_INSERT, span, selection, s));
+        AddUndo(UndoEntry(UndoEntry::U_INSERT, Span(p, p), selection, s));
 
-    chars.insert(chars.begin() + span.Begin(), s.begin(), s.end());
-    selection.end = span.Begin() + s.size();
+    Span span(p, p + s.size());
+    chars.insert(chars.begin() + span.begin, s.begin(), s.end());
+
+    selection.end = span.end;
     selection.begin = selection.end;
     MakeCursorVisible();
 
-    {   // Fix up attributes
-        std::map<Span, Attribute>::iterator itFound = attributes.lower_bound(span);
-        if (itFound != attributes.begin() && std::prev(itFound)->first.end > span.begin)
-            --itFound;
-        if (itFound != attributes.end())
-        {
-            std::map<Span, Attribute>::iterator it = std::prev(attributes.end());
-            while (it != itFound)
-            {
-                Span newspan = it->first;
-                Attribute a = it->second;
-                newspan.begin += s.size();
-                newspan.end += s.size();
-                attributes[newspan] = a;
-                it = std::prev(attributes.erase(it));
-            }
-
-            {
-                Span newspan = it->first;
-                Attribute a = it->second;
-                if (it->first.begin > p)
-                    newspan.begin += s.size();
-                newspan.end += s.size();
-                attributes[newspan] = a;
-                attributes.erase(it);
-            }
-        }
-        ApplyBrush(Span(span.begin, span.begin + s.size()));
-    }
+    MapSpanInflate(attributes, span);
+    ApplyBrush(span);
 
     invalid = true;
 }
