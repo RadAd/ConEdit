@@ -145,7 +145,7 @@ public:
         : hHandle(h)
     {
         GetConsoleMode(hHandle, &mode);
-        WORD newMode = (mode & newModeMask) | newModeSet;
+        WORD newMode = (mode & ~newModeMask) | newModeSet;
         SetConsoleMode(hHandle, newMode);
     }
 

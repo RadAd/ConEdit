@@ -327,8 +327,8 @@ int wmain(int argc, const wchar_t* argv[])
 
         const Screen screenOrig;
         AutoRestoreBufferInfo arbi(screenOrig.hOut);
-        AutoRestoreMode armIn(screenOrig.hIn, ENABLE_EXTENDED_FLAGS | ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT, 0);
-        AutoRestoreMode armOut(screenOrig.hOut, 0, static_cast<WORD>(~(ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT)));
+        AutoRestoreMode armIn(screenOrig.hIn, ENABLE_EXTENDED_FLAGS | ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT, 0xFFFF);
+        AutoRestoreMode armOut(screenOrig.hOut, 0, ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
 
         Screen screen(screenOrig);
         screen.hOut = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, CONSOLE_TEXTMODE_BUFFER, nullptr);
