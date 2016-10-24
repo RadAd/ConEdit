@@ -5,8 +5,9 @@
 #include "Mode.h"
 #include "FileInfo.h"
 #include "BoyerMoore.h"
-#include "..\SyntaxHighlighter\SyntaxHighlighterLib\include\Brush.h"
-#include "..\SyntaxHighlighter\SyntaxHighlighterLib\include\SyntaxHighlighter.h"
+
+#include <Brush.h>
+#include <SyntaxHighlighter.h>
 
 // Note
 // The attribute span is not updated in the undo/redo stack.

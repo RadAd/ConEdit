@@ -12,7 +12,8 @@
 #include "ModeEdit.h"
 #include "ModeStatus.h"
 #include "ModeFind.h"
-#include "..\SyntaxHighlighter\SyntaxHighlighterLib\include\SyntaxHighlighterBrushes.h"
+
+#include <SyntaxHighlighterBrushes.h>
 
 #include "resource.h"
 
