@@ -193,7 +193,7 @@
     <Text Include="help.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SyntaxHighlighter\SyntaxHighlighterLib\SyntaxHighlighterLib.vcxproj">
+    <ProjectReference Include="SyntaxHighlighter\SyntaxHighlighterLib\SyntaxHighlighterLib.vcxproj">
       <Project>{a2881a4c-9b10-487d-89a9-379c3ec0b221}</Project>
     </ProjectReference>
   </ItemGroup>

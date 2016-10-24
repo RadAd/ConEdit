@@ -1,0 +1,3 @@
+[submodule "SyntaxHighlighter"]
+	path = SyntaxHighlighter
+	url = https://github.com/RadAd/SyntaxHighlighterCPP.git

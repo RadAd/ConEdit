@@ -8,7 +8,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConEdit", "ConEdit.vcxproj"
 		{A2881A4C-9B10-487D-89A9-379C3EC0B221} = {A2881A4C-9B10-487D-89A9-379C3EC0B221}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntaxHighlighterLib", "..\SyntaxHighlighter\SyntaxHighlighterLib\SyntaxHighlighterLib.vcxproj", "{A2881A4C-9B10-487D-89A9-379C3EC0B221}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntaxHighlighterLib", "SyntaxHighlighter\SyntaxHighlighterLib\SyntaxHighlighterLib.vcxproj", "{A2881A4C-9B10-487D-89A9-379C3EC0B221}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
