@@ -326,6 +326,10 @@ int wmain(int argc, const wchar_t* argv[])
         if (fileInfo.exists)
             chars = fileInfo.load(l);
 
+        HWND hWnd = GetConsoleWindow();
+        HICON hIcon = (HICON) SendMessage(hWnd, WM_GETICON, ICON_SMALL, 0);
+        SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM) LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON)));
+
         const Screen screenOrig;
         AutoRestoreBufferInfo arbi(screenOrig.hOut);
         AutoRestoreMode armIn(screenOrig.hIn, ENABLE_EXTENDED_FLAGS | ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT, 0xFFFF);
@@ -353,6 +357,8 @@ int wmain(int argc, const wchar_t* argv[])
         hKey = NULL;
 
         DoMode(mce, screen, scheme);
+
+        SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM) hIcon);
 
         _free_locale(l);
 
