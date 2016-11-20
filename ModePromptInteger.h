@@ -2,7 +2,7 @@
 class ModePromptInteger : public ModeBase
 {
 public:
-    ModePromptInteger(Mode* base, Buffer& status, COORD& pos, const wchar_t* p)
+    ModePromptInteger(Mode* base, Buffer& status, const COORD& pos, const wchar_t* p)
         : ModeBase(base)
         , buffer(status)
         , pos(pos)

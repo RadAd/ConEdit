@@ -60,6 +60,9 @@
     <ClInclude Include="AboutMessage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ModeInfoBox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

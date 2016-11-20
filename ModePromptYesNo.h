@@ -2,7 +2,7 @@
 class ModePromptYesNo : public ModeBase
 {
 public:
-    ModePromptYesNo(Mode* base, Buffer& status, COORD& pos, const wchar_t* p)
+    ModePromptYesNo(Mode* base, Buffer& status, const COORD& pos, const wchar_t* p)
         : ModeBase(base)
         , buffer(status)
         , pos(pos)

@@ -7,6 +7,7 @@
 #include "TextUtils.h"
 #include "FileInfo.h"
 #include "Mode.h"
+#include "ModeInfoBox.h"
 #include "ModePromptYesNo.h"
 #include "ModePromptInteger.h"
 #include "ModeEdit.h"
@@ -96,6 +97,41 @@ public:
 
             switch (ker.wVirtualKeyCode)
             {
+            case VK_F1:
+                {
+                    wchar_t* pWData = nullptr;
+                    {
+                        HMODULE hModule = NULL;
+                        Memory mem = GetResource(hModule, IDR_TEXT);
+                        const char* pData = static_cast<const char*>(mem.data);
+
+                        pWData = new wchar_t[mem.size + 1];
+                        for (DWORD i = 0; i < mem.size; ++i)
+                        {
+                            switch (pData[i])
+                            {
+                            case '\r':
+                                pWData[i] = L' ';
+                                break;
+                            case '\n':
+                                pWData[i] = L'\0';
+                                break;
+                            default:
+                                pWData[i] = pData[i];
+                                break;
+                            }
+                        }
+                        pWData[mem.size] = L'\0';
+                    }
+
+                    ModeInfoBox mmb(this, _COORD(4, 4), pWData);
+                    DoMode(mmb, screen, scheme);
+
+                    delete[] pWData;
+                    me.invalid = true;
+                }
+                break;
+
             case VK_F3:
                 switch (ker.dwControlKeyState & 0x1F)
                 {

@@ -41,8 +41,19 @@ void Write(std::vector<CHAR_INFO>::iterator b, std::vector<CHAR_INFO>::iterator 
     const wchar_t* t = s;
     while (it != e && *t != L'\0')
     {
-        it->Char.UnicodeChar = *t;
-        ++it;
+        if (*t == L'\t')
+        {
+            for (int i = 0; i < 4; ++i) // TODO Should really be x - x%4
+            {
+                it->Char.UnicodeChar = L' ';
+                ++it;
+            }
+        }
+        else
+        {
+            it->Char.UnicodeChar = *t;
+            ++it;
+        }
         ++t;
     }
 }

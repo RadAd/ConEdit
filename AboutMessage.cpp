@@ -81,14 +81,22 @@ void DisplayAboutMessage(HINSTANCE hInstance)
     free(Info);
 }
 
-void DisplayResource(HMODULE hModule, WORD wRes)
+Memory GetResource(HMODULE hModule, WORD wRes)
 {
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    Memory ret = {};
     HRSRC hResource = FindResource(hModule, MAKEINTRESOURCE(wRes), RT_RCDATA);
     if (hResource == NULL)
         throw std::exception("Can't find resource");
-    DWORD size = SizeofResource(hModule, hResource);
+    ret.size = SizeofResource(hModule, hResource);
     HGLOBAL hResourceData = LoadResource(hModule, hResource);
-    const char* pData = static_cast<const char*>(LockResource(hResourceData));
-    WriteConsoleA(hOut, pData, size, nullptr, nullptr);
+    ret.data = LockResource(hResourceData);
+    return ret;
+}
+
+void DisplayResource(HMODULE hModule, WORD wRes)
+{
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    Memory mem = GetResource(hModule, wRes);
+    const char* pData = static_cast<const char*>(mem.data);
+    WriteConsoleA(hOut, pData, mem.size, nullptr, nullptr);
 }

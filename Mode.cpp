@@ -118,6 +118,12 @@ void DoMode(Mode& m, Screen& screen, const EditScheme& scheme)
             break;
 
         case WINDOW_BUFFER_SIZE_EVENT:
+            {
+                CONSOLE_SCREEN_BUFFER_INFO csbi;
+                GetConsoleScreenBufferInfo(screen.hOut, &csbi);
+                screen.csbi.dwSize = csbi.dwSize;
+                screen.csbi.srWindow = csbi.srWindow;
+            }
             m.Do(ir.Event.WindowBufferSizeEvent);
             break;
         }

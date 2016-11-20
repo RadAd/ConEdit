@@ -162,6 +162,7 @@
     <ClInclude Include="Mode.h" />
     <ClInclude Include="ModeEdit.h" />
     <ClInclude Include="ModeFind.h" />
+    <ClInclude Include="ModeInfoBox.h" />
     <ClInclude Include="ModePromptInteger.h" />
     <ClInclude Include="ModePromptYesNo.h" />
     <ClInclude Include="ModeStatus.h" />
