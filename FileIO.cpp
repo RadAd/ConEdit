@@ -13,10 +13,15 @@ namespace
     bool isbom(std::vector<char>& data, const char* c)
     {
         size_t len = strlen(c);
-        bool is = memcmp(&data.front(), c, len) == 0;
-        if (is)
-            data.erase(data.begin(), data.begin() + len);
-        return is;
+        if (data.size() >= len)
+        {
+            bool is = memcmp(&data.front(), c, len) == 0;
+            if (is)
+                data.erase(data.begin(), data.begin() + len);
+            return is;
+        }
+        else
+            return false;
     }
 
     void byteswap16(unsigned short* data, size_t count)
@@ -54,7 +59,8 @@ namespace
         _fseeki64(f, 0, SEEK_SET);
 
         data.resize(size);
-        fread(&data.front(), 1, size, f);
+        if (!data.empty())
+            fread(&data.front(), 1, size, f);
 
         fclose(f);
 
@@ -82,7 +88,8 @@ namespace
             size_t len = strlen(c);
             fwrite(c, 1, len, f);
         }
-        fwrite(&data.front(), 1, data.size(), f);
+        if (!data.empty())
+            fwrite(&data.front(), 1, data.size(), f);
 
         fclose(f);
     }

@@ -69,11 +69,9 @@ public:
     {
         me.LoadTheme(hKey);
         const wchar_t* ext = wcsrchr(fileInfo.filename, L'.');
-        if (ext != nullptr)
-        {
-            const Brush* b = brushes.getBrushByExtension(ext + 1);
-            me.SetBrush(b);
-        }
+        ext = (ext != nullptr) ? ext + 1 : L"";
+        const Brush* b = brushes.getBrushByExtension(ext);
+        me.SetBrush(b);
     }
 
     void Draw(Screen& screen, const EditScheme& scheme, bool focus) const

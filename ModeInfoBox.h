@@ -2,7 +2,6 @@
 
 // TODO
 // Support scroll??
-// Support when resizing window??
 
 class ModeInfoBox : public ModeBase
 {
