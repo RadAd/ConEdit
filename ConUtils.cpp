@@ -32,7 +32,7 @@ void SetCursorVisible(HANDLE hScreen, CONSOLE_CURSOR_INFO& cci, BOOL bVisible)
 void DrawBuffer(HANDLE hScreen, const Buffer& buffer, COORD posBuffer)
 {
     SMALL_RECT wr = Rectangle(posBuffer, buffer.size);
-    WriteConsoleOutput(hScreen, &buffer.data.front(), buffer.size, _COORD(0, 0), &wr);
+    WriteConsoleOutput(hScreen, buffer.data.data(), buffer.size, _COORD(0, 0), &wr);
 }
 
 void Write(std::vector<CHAR_INFO>::iterator b, std::vector<CHAR_INFO>::iterator e, const wchar_t* s)

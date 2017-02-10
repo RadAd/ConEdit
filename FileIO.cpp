@@ -15,7 +15,7 @@ namespace
         size_t len = strlen(c);
         if (data.size() >= len)
         {
-            bool is = memcmp(&data.front(), c, len) == 0;
+            bool is = memcmp(data.data(), c, len) == 0;
             if (is)
                 data.erase(data.begin(), data.begin() + len);
             return is;
@@ -36,13 +36,13 @@ namespace
         for (wchar_t& c : chars)
             c = _byteswap_ushort(c);
 #else
-        byteswap16(reinterpret_cast<unsigned short*>(&chars.front()), chars.size() - 1);
+        byteswap16(reinterpret_cast<unsigned short*>(chars.data()), chars.size() - 1);
 #endif
     }
 
     void byteswap(std::vector<char>& data)
     {
-        byteswap16(reinterpret_cast<unsigned short*>(&data.front()), (data.size() - 1) * (sizeof(wchar_t) / sizeof(char)));
+        byteswap16(reinterpret_cast<unsigned short*>(data.data()), (data.size() - 1) * (sizeof(wchar_t) / sizeof(char)));
     }
 
     std::vector<char> loadfile(const wchar_t* filename, BOM& bom)
@@ -60,7 +60,7 @@ namespace
 
         data.resize(size);
         if (!data.empty())
-            fread(&data.front(), 1, size, f);
+            fread(data.data(), 1, size, f);
 
         fclose(f);
 
@@ -89,12 +89,12 @@ namespace
             fwrite(c, 1, len, f);
         }
         if (!data.empty())
-            fwrite(&data.front(), 1, data.size(), f);
+            fwrite(data.data(), 1, data.size(), f);
 
         fclose(f);
     }
 
-    std::vector<wchar_t> convert(const std::vector<char>& data, BOM bom, _locale_t l)
+    std::vector<wchar_t> convert(const std::vector<char>& data, BOM bom)
     {
         std::vector<wchar_t> chars;
 
@@ -103,28 +103,25 @@ namespace
         case BOM_UTF16BE:
         case BOM_UTF16LE:
             chars.resize((data.size() - 1) / (sizeof(wchar_t) / sizeof(char)) + 1);
-            memcpy(&chars.front(), &data.front(), data.size() - 1);
+            memcpy(chars.data(), data.data(), data.size() - 1);
             chars.back() = data.back();
             if (bom == BOM_UTF16BE)
                 byteswap(chars);
             break;
 
         default:
-            size_t s = 0;
-            errno_t e = _mbstowcs_s_l(&s, nullptr, 0, &data.front(), 0, l);
-            if (e != 0)
+            int s = MultiByteToWideChar(CP_UTF8, 0, data.data(), (int) data.size(), nullptr, 0);
+            if (s == 0)
                 throw std::exception("Error converting to wcs");
             chars.resize(s);
-            e = _mbstowcs_s_l(&s, &chars.front(), s, &data.front(), s - 1, l);
-            if (e != 0)
-                throw std::exception("Error converting to wcs");
+            MultiByteToWideChar(CP_UTF8, 0, data.data(), (int) data.size(), chars.data(), s);
             break;
         }
 
         return chars;
     }
 
-    std::vector<char> convert(const std::vector<wchar_t>& chars, BOM bom, _locale_t l)
+    std::vector<char> convert(const std::vector<wchar_t>& chars, BOM bom)
     {
         std::vector<char> data;
 
@@ -133,44 +130,40 @@ namespace
         case BOM_UTF16BE:
         case BOM_UTF16LE:
             data.resize((chars.size() - 1) * (sizeof(wchar_t) / sizeof(char)) + 1);
-            memcpy(&data.front(), &chars.front(), data.size() - 1);
+            memcpy(data.data(), chars.data(), data.size() - 1);
             data.back() = static_cast<char>(chars.back());
             if (bom == BOM_UTF16BE)
                 byteswap(data);
             break;
 
         default:
-            size_t s = 0;
-            errno_t e = _wcstombs_s_l(&s, nullptr, 0, &chars.front(), 0, l);
-            if (e != 0)
-                throw std::exception("Error converting to mbs");
+            int s = WideCharToMultiByte(CP_UTF8, 0, chars.data(), (int) chars.size(), nullptr, 0, nullptr, nullptr);
+            if (s == 0)
+                throw std::exception("Error converting to wcs");
             data.resize(s);
-            e = _wcstombs_s_l(&s, &data.front(), s, &chars.front(), s - 1, l);
-            if (e != 0)
-                throw std::exception("Error converting to mbs");
-            break;
+            WideCharToMultiByte(CP_UTF8, 0, chars.data(), (int) chars.size(), data.data(), s, nullptr, nullptr);
         }
 
         return data;
     }
 }
 
-std::vector<wchar_t> loadtextfile(const wchar_t* filename, BOM& bom, _locale_t l)
+std::vector<wchar_t> loadtextfile(const wchar_t* filename, BOM& bom)
 {
     std::vector<char> data = loadfile(filename, bom);
     data.push_back('\0');
-    std::vector<wchar_t> chars = convert(data, bom, l);
+    std::vector<wchar_t> chars = convert(data, bom);
 #if 1
-    std::vector<char> cmp = convert(chars, bom, l);
+    std::vector<char> cmp = convert(chars, bom);
     if (data != cmp)
         throw std::exception("Unicode convert check failed");
 #endif
     return chars;
 }
 
-void savetextfile(const wchar_t* filename, BOM bom, _locale_t l, const std::vector<wchar_t>& chars)
+void savetextfile(const wchar_t* filename, BOM bom, const std::vector<wchar_t>& chars)
 {
-    std::vector<char> data = convert(chars, bom, l);
+    std::vector<char> data = convert(chars, bom);
     data.pop_back();
     savefile(filename, bom, data);
 }

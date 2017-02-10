@@ -171,8 +171,8 @@ public:
     typedef wint_t(*CharTransfomT)(wint_t);
     void Transform(CharTransfomT f);
 
-    void Save(FileInfo& fileInfo, _locale_t l);
-    void Revert(FileInfo& fileInfo, _locale_t l);
+    void Save(FileInfo& fileInfo);
+    void Revert(FileInfo& fileInfo);
 
     Span CopyToClipboard() const;
     void CopyFromClipboard();

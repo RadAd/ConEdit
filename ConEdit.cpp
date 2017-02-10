@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include <locale.h>
 
 #include "AboutMessage.H"
 #include "FileIO.h"
@@ -17,6 +16,9 @@
 #include <SyntaxHighlighterBrushes.h>
 
 #include "resource.h"
+
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#define DISABLE_NEWLINE_AUTO_RETURN 0x0008
 
 // TODO
 // Full editing in ModeFind and ModePromptInteger
@@ -45,11 +47,10 @@ void AssertMsg(const char* test, const char* msg, const char* file, int line)
     throw std::exception(b);
 }
 
-std::wstring convert(const char* m, _locale_t l)
+std::wstring convert(const char* m)
 {
     wchar_t msg[1024];
-    size_t s = 0;
-    _mbstowcs_s_l(&s, msg, 1024, m, _TRUNCATE, l);
+    MultiByteToWideChar(CP_UTF8, 0, m, -1, msg, ARRAYSIZE(msg));
     return msg;
 }
 
@@ -59,13 +60,11 @@ public:
     ModeConEdit(HKEY hKey,
         FileInfo& fileInfo,
         COORD size,
-        std::vector<wchar_t>& chars,
-        _locale_t l)
+        std::vector<wchar_t>& chars)
         : fileInfo(fileInfo)
         , me(size - _COORD(0, 1), !fileInfo.exists, fileInfo.exists && (fileInfo.stat.st_mode & _S_IWRITE) == 0, chars)
         , ms(_COORD(size.X, 1), _COORD(0, me.buffer.size.Y), me, fileInfo, chars)
         , mf(this, _COORD(20, 1), _COORD(me.buffer.size.X - 20, 0), FindCB, this)
-        , l(l)
     {
         me.LoadTheme(hKey);
         const wchar_t* ext = wcsrchr(fileInfo.filename, L'.');
@@ -213,7 +212,7 @@ public:
                 {
                 case RIGHT_CTRL_PRESSED:
                 case LEFT_CTRL_PRESSED:
-                    me.Revert(fileInfo, l);
+                    me.Revert(fileInfo);
                     break;
                 }
                 break;
@@ -227,12 +226,12 @@ public:
                     {
                         try
                         {
-                            me.Save(fileInfo, l);
+                            me.Save(fileInfo);
                             ms.message = L"Saved";
                         }
                         catch (const std::exception& e)
                         {
-                            ms.error = convert(e.what(), l);
+                            ms.error = convert(e.what());
                             me.invalid = true;
                         }
                     }
@@ -255,7 +254,7 @@ public:
                             WORD key = mpyn.Ret();
                             me.invalid = true;
                             if (key == L'Y')
-                                me.Save(fileInfo, l);
+                                me.Save(fileInfo);
                             if (key != 0)
                                 cont = false;
                         }
@@ -301,7 +300,7 @@ public:
                 me.readOnly = fileInfo.isreadonly();
                 me.invalid = true;
                 if (key == 'Y')
-                    me.Revert(fileInfo, l);
+                    me.Revert(fileInfo);
             }
             if (modeChanged)
                 me.invalid = true;
@@ -338,7 +337,6 @@ private:
     ModeEdit me;
     ModeStatus ms;
     ModeFind mf;
-    _locale_t l;
     SyntaxHighlighterBrushes brushes;
 };
 
@@ -353,12 +351,10 @@ int wmain(int argc, const wchar_t* argv[])
             return 1;
         }
 
-        _locale_t l = _create_locale(LC_ALL, "C");
-
         FileInfo fileInfo(argv[1]);
         std::vector<wchar_t> chars;
         if (fileInfo.exists)
-            chars = fileInfo.load(l);
+            chars = fileInfo.load();
 
         HWND hWnd = GetConsoleWindow();
         HICON hIcon = (HICON) SendMessage(hWnd, WM_GETICON, ICON_SMALL, 0);
@@ -367,7 +363,7 @@ int wmain(int argc, const wchar_t* argv[])
         const Screen screenOrig;
         AutoRestoreBufferInfo arbi(screenOrig.hOut);
         AutoRestoreMode armIn(screenOrig.hIn, ENABLE_EXTENDED_FLAGS | ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT, 0xFFFF);
-        AutoRestoreMode armOut(screenOrig.hOut, 0, ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+        AutoRestoreMode armOut(screenOrig.hOut, 0, ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
 
         Screen screen(screenOrig);
         screen.hOut = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, CONSOLE_TEXTMODE_BUFFER, nullptr);
@@ -385,7 +381,7 @@ int wmain(int argc, const wchar_t* argv[])
 
         AutoRestoreActiveScreenBuffer arasb(screenOrig.hOut, screen.hOut);
 
-        ModeConEdit mce(hKey, fileInfo, GetSize(screen.csbi.srWindow), chars, l);
+        ModeConEdit mce(hKey, fileInfo, GetSize(screen.csbi.srWindow), chars);
 
         RegCloseKey(hKey);
         hKey = NULL;
@@ -393,8 +389,6 @@ int wmain(int argc, const wchar_t* argv[])
         DoMode(mce, screen, scheme);
 
         SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM) hIcon);
-
-        _free_locale(l);
 
         return 0;
     }

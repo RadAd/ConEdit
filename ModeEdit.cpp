@@ -266,17 +266,19 @@ void ModeEdit::FillCharsWindow(const EditScheme& scheme, COORD& cursor) const
                             wAttrWhiteSpace.apply(itW->Attributes);
                         }
                     }
-                    else if (iswprint(chars[p])) // TODO Use locale?
-                        itW->Char.UnicodeChar = chars[p];
-                    else
+                    else if (iswcntrl(chars[p])) // TODO Use locale?
                     {
                         switch (chars[p])
                         {
-                        case 27: itW->Char.UnicodeChar = L'E'; break;   // Escape
+                        case 0x00: itW->Char.UnicodeChar = L'N'; break;   // Null
+                        case 0x08: itW->Char.UnicodeChar = L'B'; break;   // Backspace
+                        case 0x1B: itW->Char.UnicodeChar = L'E'; break;   // Escape
                         default: itW->Char.UnicodeChar = L'¿'; break;
                         }
                         wAttrNonPrint.apply(itW->Attributes);
                     }
+                    else
+                        itW->Char.UnicodeChar = chars[p];
                     if (selection.isin(p))
                         wAttrSelected.apply(itW->Attributes);
                     ++p;
@@ -1193,20 +1195,20 @@ void ModeEdit::Redo()
     }
 }
 
-void ModeEdit::Save(FileInfo& fileInfo, _locale_t l)
+void ModeEdit::Save(FileInfo& fileInfo)
 {
     if (isEdited())
     {
-        fileInfo.save(chars, l);
+        fileInfo.save(chars);
         markSaved();
         invalid = true;
     }
 }
 
-void ModeEdit::Revert(FileInfo& fileInfo, _locale_t l)
+void ModeEdit::Revert(FileInfo& fileInfo)
 {
     ClearUndo();
-    chars = fileInfo.load(l);
+    chars = fileInfo.load();
     invalid = true;
     eol = GetEOL(chars);
     MoveCursor(0, false);

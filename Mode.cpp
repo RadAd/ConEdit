@@ -121,8 +121,25 @@ void DoMode(Mode& m, Screen& screen, const EditScheme& scheme)
             {
                 CONSOLE_SCREEN_BUFFER_INFO csbi;
                 GetConsoleScreenBufferInfo(screen.hOut, &csbi);
-                screen.csbi.dwSize = csbi.dwSize;
+                //screen.csbi.dwSize = csbi.dwSize;
                 screen.csbi.srWindow = csbi.srWindow;
+
+                screen.csbi.dwSize = ir.Event.WindowBufferSizeEvent.dwSize;
+
+#if 0   // Causing too much jitter
+                if (screen.csbi.dwSize != GetSize(screen.csbi.srWindow))
+                {   // Lock window size to buffer size
+                    screen.csbi.srWindow.Left = 0;
+                    screen.csbi.srWindow.Right = screen.csbi.dwSize.X - 1;
+                    screen.csbi.srWindow.Top = 0;
+                    screen.csbi.srWindow.Bottom = screen.csbi.dwSize.Y - 1;
+                    SetConsoleWindowInfo(screen.hOut, TRUE, &screen.csbi.srWindow);
+
+                    wchar_t b[1024];
+                    swprintf_s(b, L"window size %d,%d\n", screen.csbi.dwSize.X, screen.csbi.dwSize.Y);
+                    OutputDebugString(b);
+                }
+#endif
             }
             m.Do(ir.Event.WindowBufferSizeEvent);
             break;

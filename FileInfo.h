@@ -29,16 +29,16 @@ struct FileInfo
         return exists && (stat.st_mode & _S_IWRITE) == 0;
     }
 
-    std::vector<wchar_t> load(_locale_t l)
+    std::vector<wchar_t> load()
     {
         exists = _wstati64(filename, &stat) == 0;
 
-        std::vector<wchar_t> chars = loadtextfile(filename, bom, l);
+        std::vector<wchar_t> chars = loadtextfile(filename, bom);
         chars.pop_back(); // Remove null terminator
         return chars;
     }
 
-    void save(std::vector<wchar_t>& chars, _locale_t l)
+    void save(std::vector<wchar_t>& chars)
     {
         struct TempPushBack
         {
@@ -55,7 +55,7 @@ struct FileInfo
         };
 
         TempPushBack tpb(chars, L'\0');
-        savetextfile(filename, bom, l, chars);
+        savetextfile(filename, bom, chars);
 
         exists = _wstati64(filename, &stat) == 0;
     }
