@@ -12,7 +12,7 @@ ConEdit <filename>
   Ctrl-U	- Make uppercase
   Ctrl-Shift-U	- Make lowercase
   Ctrl-V	- Paste from clipboard
-  Ctrl-W	- Toggle show whitespace
+  Ctrl-Alt-W	- Toggle show whitespace
   Ctrl-X	- Cut selection to clipboard
   Ctrl-Y	- Redo
   Ctrl-Z	- Undo
@@ -20,4 +20,6 @@ ConEdit <filename>
   Ctrl-]	- Find matching brace
   F3		- Search forward
   Shift-F3	- Search backward
+  Ctrl-F3	- Search selected text forward
+  Ctrl-Shift-F3	- Search selected text backward
   F12		- Resize buffer to window size

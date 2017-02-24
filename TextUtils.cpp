@@ -107,7 +107,7 @@ size_t GetColumn(const std::vector<wchar_t>& chars, size_t startLine, size_t tab
     for (size_t i = startLine; i < chars.size() && i < p; ++i)
     {
         if (chars[i] == L'\t')
-            column += tabSize - ((i - startLine) % tabSize);
+            column += tabSize - (column % tabSize);
         else
             ++column;
     }
