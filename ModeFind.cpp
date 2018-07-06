@@ -4,6 +4,10 @@
 
 #include "Mode.h"
 
+// TODO
+// Support selection in edit wnidow
+// Add search option toggles - ie case sensitivity
+
 void FillMessageWindow(Buffer& status, WORD wAttr, const std::wstring& msg); // #include "ModeStatus.h"
 
 void ModeFind::Draw(Screen& screen, const EditScheme& scheme, bool focus) const

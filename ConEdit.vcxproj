@@ -208,4 +208,10 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <PropertyGroup>
+    <RunParam>test.txt</RunParam>
+  </PropertyGroup>
+  <Target Name="Run">
+    <Exec Command="start &quot;ConEdit: $(RunParam)&quot; &quot;$(TargetPath)&quot; $(RunParam)" />
+  </Target>
 </Project>
