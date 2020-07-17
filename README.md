@@ -1,4 +1,5 @@
-![Icon](ConEdit.ico) ConEdit
+<!-- ![Icon](ConEdit.ico) ConEdit -->
+<img src="ConEdit.ico" width=32/> ConEdit
 ==========
 
 A simple text editor for Windows console
